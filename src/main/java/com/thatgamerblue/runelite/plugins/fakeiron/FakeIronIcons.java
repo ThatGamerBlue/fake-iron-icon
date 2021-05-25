@@ -9,19 +9,21 @@ import lombok.RequiredArgsConstructor;
 public enum FakeIronIcons
 {
 
-	ORIGINAL_ICONS_PLACEHOLDER("--- Original ---", "", true),
-	IRONMAN("Ironman", "", false),
-	HCIM("Hardcore", "", false),
-	ULTIMATE("Ultimate", "", false),
-	CUSTOM_PLACEHOLDER("--- Custom ---", "", true),
-	GREEN("Green", "green.png", false),
-	PURPLE("Purple", "purple.png", false),
-	PINK("Pink", "pink.png", false),
-	ORANGE("Orange", "orange.png", false);
+	ORIGINAL_ICONS_PLACEHOLDER("--- Original ---", "", true, true),
+	IRONMAN("Ironman", "", false, true),
+	HCIM("Hardcore", "", false, true),
+	ULTIMATE("Ultimate", "", false, true),
+	CUSTOM_PLACEHOLDER("--- Custom ---", "", true, true),
+	GREEN("Green", "green.png", false, true),
+	PURPLE("Purple", "purple.png", false, true),
+	PINK("Pink", "pink.png", false, true),
+	ORANGE("Orange", "orange.png", false, true),
+	CUSTOM("helm.png", "helm.png", false, false);
 
 	private final String name;
 	private final String imagePath;
 	private final boolean header;
+	private final boolean embedded;
 
 	public String toString()
 	{

@@ -1,14 +1,18 @@
 package com.thatgamerblue.runelite.plugins.fakeiron;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.inject.Provides;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +28,7 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -116,7 +121,7 @@ public class FakeIronPlugin extends Plugin
 		}
 
 		if ((Stream.of(FakeIronIcons.values())
-				 .noneMatch((icon) -> (!icon.getImagePath().equals("")) && iconIds.getOrDefault(icon, -1) == -1)))
+				 .noneMatch((icon) -> (!Strings.isNullOrEmpty(icon.getImagePath())) && iconIds.getOrDefault(icon, IconID.NO_ENTRY.getIndex()) == IconID.NO_ENTRY.getIndex())))
 		{
 			return;
 		}
@@ -126,11 +131,11 @@ public class FakeIronPlugin extends Plugin
 
 	private void loadSprites()
 	{
-		clientThread.invoke(() -> {
+		clientThread.invoke(() ->
+		{
 			IndexedSprite[] modIcons = client.getModIcons();
-			IndexedSprite[] newAry = Arrays.copyOf(modIcons, Math.toIntExact(
-				modIcons.length +
-					Stream.of(FakeIronIcons.values()).filter(icon -> !icon.getImagePath().equals("")).count()));
+			List<IndexedSprite> newList = new ArrayList<>();
+
 			int modIconsStart = modIcons.length - 1;
 
 			iconIds.put(FakeIronIcons.IRONMAN, IconID.IRONMAN.getIndex());
@@ -139,16 +144,30 @@ public class FakeIronPlugin extends Plugin
 
 			for (FakeIronIcons icon : FakeIronIcons.values())
 			{
-				if (icon.getImagePath().equals(""))
+				if (Strings.isNullOrEmpty(icon.getImagePath()))
 				{
 					continue;
 				}
 
-				final IndexedSprite sprite = getIndexedSprite(icon.getImagePath());
-				newAry[++modIconsStart] = sprite;
+				final IndexedSprite sprite =
+					icon.isEmbedded() ?
+						getIndexedSpriteEmbedded(icon.getImagePath()) :
+						getIndexedSpriteFile(icon.getImagePath());
+
+				if (sprite == null)
+				{
+					continue;
+				}
+
+				newList.add(sprite);
+				modIconsStart++;
 				iconIds.put(icon, modIconsStart);
 			}
 
+			// copy the icons around as a hack to avoid
+			// java.lang.ClassCastException: class [Lnet.runelite.api.IndexedSprite; cannot be cast to class [Lof; ([Lnet.runelite.api.IndexedSprite; is in unnamed module of loader 'app'; [Lof; is in unnamed module of loader net.runelite.client.rs.ClientLoader$1 @2ecb15df)
+			IndexedSprite[] newAry = Arrays.copyOf(modIcons, modIcons.length + newList.size());
+			System.arraycopy(newList.toArray(new IndexedSprite[0]), 0, newAry, modIcons.length, newList.size());
 			client.setModIcons(newAry);
 		});
 	}
@@ -217,15 +236,31 @@ public class FakeIronPlugin extends Plugin
 		chatboxTypedText.setText(getImgTag(getIconIdx()) + Text.removeTags(rsn) + ":" + chatbox[1]);
 	}
 
-	private IndexedSprite getIndexedSprite(String file)
+	private IndexedSprite getIndexedSpriteEmbedded(String file)
 	{
 		try
 		{
 			log.debug("Loading: {}", file);
-			BufferedImage image = ImageUtil.getResourceStreamFromClass(this.getClass(), file);
+			BufferedImage image = ImageUtil.loadImageResource(this.getClass(), file);
 			return ImageUtil.getImageIndexedSprite(image, client);
 		}
 		catch (RuntimeException ex)
+		{
+			log.debug("Unable to load image: ", ex);
+		}
+
+		return null;
+	}
+
+	private IndexedSprite getIndexedSpriteFile(String file)
+	{
+		try
+		{
+			log.debug("Loading: {}", file);
+			BufferedImage image = ImageIO.read(new File(RuneLite.RUNELITE_DIR, file));
+			return ImageUtil.getImageIndexedSprite(image, client);
+		}
+		catch (RuntimeException | IOException ex)
 		{
 			log.debug("Unable to load image: ", ex);
 		}
@@ -245,6 +280,6 @@ public class FakeIronPlugin extends Plugin
 			updateSelectedIcon();
 		}
 
-		return iconIds.getOrDefault(selectedIcon, -1);
+		return iconIds.getOrDefault(selectedIcon, IconID.NO_ENTRY.getIndex());
 	}
 }
