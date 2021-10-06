@@ -141,6 +141,9 @@ public class FakeIronPlugin extends Plugin
 			iconIds.put(FakeIronIcons.IRONMAN, IconID.IRONMAN.getIndex());
 			iconIds.put(FakeIronIcons.ULTIMATE, IconID.ULTIMATE_IRONMAN.getIndex());
 			iconIds.put(FakeIronIcons.HCIM, IconID.HARDCORE_IRONMAN.getIndex());
+			// todo: update this when rl adds the icons to iconid
+			iconIds.put(FakeIronIcons.GROUP, /*IconID.GROUP_IRONMAN.getIndex()*/ 41);
+			iconIds.put(FakeIronIcons.HARDCORE_GROUP, /*IconID.HARDCORE_GROUP_IRONMAN.getIndex()*/ 42);
 
 			for (FakeIronIcons icon : FakeIronIcons.values())
 			{

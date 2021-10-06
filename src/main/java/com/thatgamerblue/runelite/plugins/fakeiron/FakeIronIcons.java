@@ -13,6 +13,8 @@ public enum FakeIronIcons
 	IRONMAN("Ironman", "", false, true),
 	HCIM("Hardcore", "", false, true),
 	ULTIMATE("Ultimate", "", false, true),
+	GROUP("Group", "", false, true),
+	HARDCORE_GROUP("HC Group", "", false, true),
 	CUSTOM_PLACEHOLDER("--- Custom ---", "", true, true),
 	GREEN("Green", "green.png", false, true),
 	PURPLE("Purple", "purple.png", false, true),
